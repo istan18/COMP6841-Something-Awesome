@@ -9,16 +9,19 @@ const VerificationPage = () => {
     const setGlobalState = context.setGlobalState;
 
     useEffect(() => {
-        if (context.globalState.isLoggedIn) {
+        if (context.globalState.uId && context.globalState.token) {
             navigate("/");
+        } else if (!context.globalState.uId) {
+            navigate("/login");
         }
-    }, [context.globalState.isLoggedIn]);
+    }, [context.globalState.uId, context.globalState.token]);
 
-    const onVerify = () => {
+    const onVerify = (token: string) => {
         setGlobalState((state) => ({
             ...state,
-            isLoggedIn: true,
+            token,
         }));
+        navigate("/");
     };
 
     return (

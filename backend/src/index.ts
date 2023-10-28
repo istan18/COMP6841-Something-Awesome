@@ -6,6 +6,7 @@ import cors from "cors";
 import userRoutes from "./routes/userRoutes";
 import mongoose from "mongoose";
 import User from "./interfaces/IUser";
+import bodyParser from "body-parser";
 
 declare global {
     namespace Express {
@@ -62,9 +63,10 @@ async function run(): Promise<void> {
     }
 }
 run().catch(console.dir);
-
 mongoose.connect(uri).then(() => {
     app.use(cors());
+    app.use(bodyParser.urlencoded({ extended: false }));
+    app.use(bodyParser.json());
     app.use(express.json());
     app.use("/users", userRoutes);
 

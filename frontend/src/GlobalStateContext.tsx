@@ -2,11 +2,12 @@ import { createContext, useContext, FC, ReactNode, Dispatch, SetStateAction, use
 
 // Define the type for your global state
 interface GlobalState {
-    isLoggedIn: boolean;
-    token: string;
+    uId: string | null;
+    token: string | null;
+    access: boolean;
 }
 
-interface GlobalStateContextValue {
+export interface GlobalStateContextValue {
     globalState: GlobalState;
     setGlobalState: Dispatch<SetStateAction<GlobalState>>;
 }
@@ -29,10 +30,10 @@ interface GlobalStateProviderProps {
 
 // Create the GlobalStateProvider component
 export const GlobalStateProvider: FC<GlobalStateProviderProps> = ({ children }) => {
-    const token = localStorage.getItem("token");
     const [globalState, setGlobalState] = useState<GlobalState>({
-        isLoggedIn: false,
-        token: token || "",
+        uId: null,
+        token: null,
+        access: false,
     });
 
     const value: GlobalStateContextValue = {

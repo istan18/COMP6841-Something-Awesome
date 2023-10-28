@@ -9,16 +9,15 @@ const RegisterPage = () => {
     const setGlobalState = context.setGlobalState;
 
     useEffect(() => {
-        if (context.globalState.isLoggedIn) {
+        if (context.globalState.uId && context.globalState.token) {
             navigate("/");
         }
-    }, [context.globalState.isLoggedIn]);
+    }, [context.globalState.uId, context.globalState.token]);
 
-    const handleRegister = (token: string) => {
-        localStorage.setItem("token", token);
+    const handleRegister = (uId: string) => {
         setGlobalState((state) => ({
             ...state,
-            token,
+            uId,
         }));
         navigate("/verify");
     };

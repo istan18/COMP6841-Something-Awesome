@@ -1,5 +1,17 @@
 import express, { Request, Response } from "express";
-import { registerUser, loginUser, sendVerificationCode, checkVerificationCode } from "../controllers/userControllers";
+import {
+    registerUser,
+    loginUser,
+    sendMobileVerificationCode,
+    checkMobileVerificationCode,
+    sendEmailVerificationCode,
+    checkEmailVerificationCode,
+    getPasscode,
+    setPasscode,
+    verifyPasscode,
+    sendForgotPassword,
+    checkResetPassword,
+} from "../controllers/userControllers";
 import { authenticateToken, trackLoginAttempts } from "../middleware/authentication";
 
 const tokenBlacklist: Set<string> = new Set();
@@ -17,8 +29,10 @@ const router = express.Router();
 
 router.post("/register", registerUser);
 router.post("/login", trackLoginAttempts, loginUser);
-router.post("/verify/send", authenticateToken, checkTokenBlacklist, sendVerificationCode);
-router.post("/verify/check", authenticateToken, checkTokenBlacklist, checkVerificationCode);
+router.post("/verify/mobile/send", sendMobileVerificationCode);
+router.post("/verify/mobile/check", checkMobileVerificationCode);
+router.post("/verify/email/send", sendEmailVerificationCode);
+router.post("/verify/email/check", checkEmailVerificationCode);
 router.post("/signout", authenticateToken, checkTokenBlacklist, (req: Request, res: Response) => {
     const authHeader = req.headers["authorization"];
     const token = authHeader && authHeader.split(" ")[1];
@@ -28,5 +42,10 @@ router.post("/signout", authenticateToken, checkTokenBlacklist, (req: Request, r
 
     res.json({ message: "Successfully signed out" });
 });
+router.get("/passcode", authenticateToken, getPasscode);
+router.post("/passcode", authenticateToken, setPasscode);
+router.post("/passcode/verify", authenticateToken, verifyPasscode);
+router.post("/reset-password", sendForgotPassword);
+router.post("/reset-password/:token", checkResetPassword);
 
 export default router;

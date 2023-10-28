@@ -7,6 +7,9 @@ interface IUser extends Document {
     phoneNumber: string;
     loginAttempts: number;
     lockUntil: Date | null;
+    passcode: string | null;
+    resetToken: string | null;
+    resetTokenExpires: Date | null;
 }
 
 export default IUser;

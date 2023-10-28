@@ -9,17 +9,15 @@ const LoginPage = () => {
     const setGlobalState = context.setGlobalState;
 
     useEffect(() => {
-        if (context.globalState.isLoggedIn) {
+        if (context.globalState.uId && context.globalState.token) {
             navigate("/");
         }
-    }, [context.globalState.isLoggedIn]);
+    }, [context.globalState.uId, context.globalState.token]);
 
-    const handleLogin = (token: string) => {
-        localStorage.setItem("token", token);
-        console.log(token);
+    const handleLogin = (uId: string) => {
         setGlobalState((state) => ({
             ...state,
-            token,
+            uId,
         }));
         navigate("/verify");
     };
@@ -28,6 +26,7 @@ const LoginPage = () => {
         <div>
             <Login onLogin={handleLogin} />
             <button onClick={() => navigate("/register")}>Don&rsquo;t have an account? Register</button>
+            <button onClick={() => navigate("/reset")}>Forgot password?</button>
         </div>
     );
 };

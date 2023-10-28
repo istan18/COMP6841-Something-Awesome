@@ -3,19 +3,20 @@ import axios from "axios";
 import validator from "validator";
 import { parsePhoneNumberFromString } from "libphonenumber-js";
 import ReCAPTCHA from "react-google-recaptcha";
-
+import { getPasswordColor, getPasswordStrength, handleGeneratePassword } from "../utils";
 interface RegisterProps {
-    onRegister: (token: string) => void;
+    onRegister: (uId: string) => void;
 }
 
 function isValidPhoneNumber(phoneNumber: string) {
-    const parsedPhoneNumber = parsePhoneNumberFromString(phoneNumber, "AU"); // Change 'US' to the relevant country code
+    const parsedPhoneNumber = parsePhoneNumberFromString(phoneNumber, "AU");
     return parsedPhoneNumber && parsedPhoneNumber.isValid();
 }
 
 const Register: React.FC<RegisterProps> = ({ onRegister }) => {
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
     const [email, setEmail] = useState("");
     const [phoneNumber, setPhoneNumber] = useState("");
     const [firstName, setFirstName] = useState("");
@@ -27,14 +28,17 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
         if (username.length < 5) {
             console.error("Username is too short");
             return;
-        } else if (password.length < 8) {
-            console.error("Password is too short");
+        } else if (getPasswordStrength(password) !== "good" && getPasswordStrength(password) !== "strong") {
+            console.error("Password is not secure enough");
             return;
         } else if (!validator.isEmail(email)) {
             console.error("Invalid email inputted");
             return;
         } else if (!isValidPhoneNumber(phoneNumber)) {
             console.error("Phone number is invalid");
+            return;
+        } else if (password !== confirmPassword) {
+            console.error("Passwords do not match");
             return;
         }
 
@@ -48,7 +52,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 phoneNumber,
                 captcha,
             });
-            onRegister(response.data.token);
+            onRegister(response.data.uId);
         } catch (error) {
             console.error(error);
         }
@@ -74,17 +78,27 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
             <br />
             <label>
                 Password:
-                <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} />
+                <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    style={{ outlineColor: getPasswordColor(password) }}
+                />
             </label>
+            <button onClick={(e) => handleGeneratePassword(e, setPassword)}>Generate password</button>
             <br />
             <label>
+                Confirm Password:
+                <input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} />
+            </label>
+            <label>
                 Email:
-                <input type="text" value={email} onChange={(e) => setEmail(e.target.value)} />
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
             </label>
             <br />
             <label>
                 Phone Number:
-                <input type="text" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
+                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
             </label>
             <ReCAPTCHA
                 sitekey="6LdporEoAAAAAP336VV1NAYb1tiX90Fl5NZU9oQm"
