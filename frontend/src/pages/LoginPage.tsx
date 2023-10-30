@@ -14,10 +14,11 @@ const LoginPage = () => {
         }
     }, [context.globalState.uId, context.globalState.token]);
 
-    const handleLogin = (uId: string) => {
+    const handleLogin = (uId: string, key: string) => {
         setGlobalState((state) => ({
             ...state,
             uId,
+            key,
         }));
         navigate("/verify");
     };

@@ -6,6 +6,7 @@ import axios from "axios";
 import twilio from "twilio";
 import nodemailer from "nodemailer";
 import bcrypt from "bcrypt";
+import CryptoJS from "crypto-js";
 
 const generateToken = (userId: string): string => {
     const token = jwt.sign({ userId }, process.env.JWT_SECRET as string, { expiresIn: "1h" });
@@ -67,9 +68,10 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
             return res.status(401).json({ error: "Invalid captcha" });
         } else {
             console.log("Valid captcha");
+            const key = CryptoJS.AES.encrypt(password, process.env.PASSWORD_GEN_KEY as string).toString();
             return res
                 .status(201)
-                .json({ message: "User registered successfully", uId: user._id.toString(), locked: false });
+                .json({ message: "User registered successfully", uId: user._id.toString(), locked: false, key });
         }
     } catch (error: any) {
         console.error(error);
@@ -99,11 +101,12 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
             return res.status(401).json({ error: "Invalid captcha", locked: false });
         }
 
-        user.loginAttempts = 0;
-        user.lockUntil = null;
+        user.userAuthentication.loginAttempts = 0;
+        user.userAuthentication.lockUntil = null;
         await user.save();
         console.log("Login successful");
-        return res.status(201).json({ message: "Login successful", uId: user._id.toString(), locked: false });
+        const key = CryptoJS.AES.encrypt(password, process.env.PASSWORD_GEN_KEY as string).toString();
+        return res.status(201).json({ message: "Login successful", uId: user._id.toString(), key, locked: false });
     } catch (error: any) {
         console.error(error);
         return res.status(500).json({ error: error.message });

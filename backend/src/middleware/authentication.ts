@@ -42,7 +42,7 @@ export const trackLoginAttempts = async (req: Request, res: Response, next: Next
         const user = await User.findOne({ username });
         if (user) {
             // Check if the account is currently locked
-            if (user.lockUntil && user.lockUntil > new Date()) {
+            if (user.userAuthentication.lockUntil && user.userAuthentication.lockUntil > new Date()) {
                 console.log("Account locked");
                 return res.status(401).json({ error: "Account locked. Try again later.", locked: true });
             }
@@ -50,12 +50,12 @@ export const trackLoginAttempts = async (req: Request, res: Response, next: Next
             const validPassword = await verifyPassword(password, user.password);
 
             if (!validPassword) {
-                console.log(user.loginAttempts);
-                user.loginAttempts += 1;
+                console.log(user.userAuthentication.loginAttempts);
+                user.userAuthentication.loginAttempts += 1;
 
-                if (user.loginAttempts >= 5) {
+                if (user.userAuthentication.loginAttempts >= 5) {
                     // Lock the account for a duration (e.g., 30 minutes)
-                    user.lockUntil = new Date(Date.now() + 1 * 60 * 1000);
+                    user.userAuthentication.lockUntil = new Date(Date.now() + 1 * 60 * 1000);
                 }
 
                 await user.save();

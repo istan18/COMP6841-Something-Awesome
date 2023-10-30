@@ -4,14 +4,15 @@ import * as dotenv from "dotenv";
 import { MongoClient, ServerApiVersion } from "mongodb";
 import cors from "cors";
 import userRoutes from "./routes/userRoutes";
+import itemRoutes from "./routes/itemRoutes";
 import mongoose from "mongoose";
-import User from "./interfaces/IUser";
+import { IUser } from "./interfaces/IUser";
 import bodyParser from "body-parser";
 
 declare global {
     namespace Express {
         interface Request {
-            user?: User;
+            user?: IUser;
         }
     }
 }
@@ -69,6 +70,7 @@ mongoose.connect(uri).then(() => {
     app.use(bodyParser.json());
     app.use(express.json());
     app.use("/users", userRoutes);
+    app.use("/items", itemRoutes);
 
     app.get("/", (req: Request, res: Response) => {
         res.send("Hello from the backend!");

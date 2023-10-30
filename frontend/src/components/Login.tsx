@@ -3,7 +3,7 @@ import axios from "axios";
 import ReCAPTCHA from "react-google-recaptcha";
 
 interface LoginProps {
-    onLogin: (uId: string) => void;
+    onLogin: (uId: string, key: string) => void;
 }
 
 const Login: React.FC<LoginProps> = ({ onLogin }) => {
@@ -18,7 +18,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 password,
                 captcha,
             });
-            onLogin(response.data.uId);
+            onLogin(response.data.uId, response.data.key);
         } catch (error: any) {
             console.error("Login failed", error.response.data);
             if (error.response.data.locked) {

@@ -52,6 +52,7 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                 setVerifiedEmail(true);
                 console.log(response.data.token);
                 onVerify(response.data.token);
+                localStorage.setItem("token", response.data.token);
             }
         } catch (error: any) {
             console.error("Verify failed", error.response.data);

@@ -5,6 +5,7 @@ interface GlobalState {
     uId: string | null;
     token: string | null;
     access: boolean;
+    key: string | null;
 }
 
 export interface GlobalStateContextValue {
@@ -20,6 +21,11 @@ export const useGlobalState = () => {
     if (!context) {
         throw new Error("useGlobalState must be used within a GlobalStateProvider");
     }
+    const { globalState, setGlobalState } = context;
+    setGlobalState((state) => ({
+        ...state,
+        token: globalState.token || localStorage.getItem("token"),
+    }));
     return context;
 };
 
@@ -34,6 +40,7 @@ export const GlobalStateProvider: FC<GlobalStateProviderProps> = ({ children }) 
         uId: null,
         token: null,
         access: false,
+        key: null,
     });
 
     const value: GlobalStateContextValue = {

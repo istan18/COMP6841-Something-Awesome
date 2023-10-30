@@ -14,10 +14,11 @@ const RegisterPage = () => {
         }
     }, [context.globalState.uId, context.globalState.token]);
 
-    const handleRegister = (uId: string) => {
+    const handleRegister = (uId: string, key: string) => {
         setGlobalState((state) => ({
             ...state,
             uId,
+            key,
         }));
         navigate("/verify");
     };

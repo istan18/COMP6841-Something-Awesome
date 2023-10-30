@@ -5,7 +5,7 @@ import { parsePhoneNumberFromString } from "libphonenumber-js";
 import ReCAPTCHA from "react-google-recaptcha";
 import { getPasswordColor, getPasswordStrength, handleGeneratePassword } from "../utils";
 interface RegisterProps {
-    onRegister: (uId: string) => void;
+    onRegister: (uId: string, key: string) => void;
 }
 
 function isValidPhoneNumber(phoneNumber: string) {
@@ -52,7 +52,7 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 phoneNumber,
                 captcha,
             });
-            onRegister(response.data.uId);
+            onRegister(response.data.uId, response.data.key);
         } catch (error) {
             console.error(error);
         }
