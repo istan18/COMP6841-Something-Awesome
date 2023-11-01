@@ -42,9 +42,9 @@ router.post("/signout", authenticateToken, checkTokenBlacklist, (req: Request, r
 
     res.json({ message: "Successfully signed out" });
 });
-router.get("/passcode", authenticateToken, getPasscode);
-router.post("/passcode", authenticateToken, setPasscode);
-router.post("/passcode/verify", authenticateToken, verifyPasscode);
+router.get("/passcode", authenticateToken, checkTokenBlacklist, getPasscode);
+router.post("/passcode", authenticateToken, checkTokenBlacklist, setPasscode);
+router.post("/passcode/verify", authenticateToken, checkTokenBlacklist, verifyPasscode);
 router.post("/reset-password", sendForgotPassword);
 router.post("/reset-password/:token", checkResetPassword);
 

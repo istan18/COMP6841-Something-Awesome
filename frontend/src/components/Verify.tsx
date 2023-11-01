@@ -1,23 +1,41 @@
 import React, { useEffect, useState } from "react";
-import { useGlobalState } from "../GlobalStateContext";
+import * as Form from "@radix-ui/react-form";
 import axios from "axios";
+import Button from "./primitives/Button";
+import Flex from "./primitives/Flex";
+import { Input, FormField, FormRoot } from "./Form";
+import { styled } from "@stitches/react";
 interface VerifyProps {
     onVerify: (token: string) => void;
 }
 
+const VerifiedTitle = styled("div", {
+    marginLeft: "auto",
+    marginRight: "auto",
+    fontSize: "1.5rem",
+});
+
+const InputContainer = styled(Flex, {
+    gap: "0.4rem",
+    marginLeft: "auto",
+    marginRight: "auto",
+});
+
 const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
-    const context = useGlobalState();
     const [verifiedPhone, setVerifiedPhone] = useState(false);
     const [verifiedEmail, setVerifiedEmail] = useState(false);
-    const uId = context.globalState.uId;
+    const uId = localStorage.getItem("uId");
 
     const [verificationCode, setVerificationCode] = useState("");
 
     useEffect(() => {
+        let isMounted = true;
         const fetchData = async () => {
             try {
                 if (!verifiedPhone && !verifiedEmail) {
-                    await sendVerification("mobile");
+                    if (isMounted) {
+                        await sendVerification("mobile");
+                    }
                 } else if (!verifiedEmail && verifiedPhone) {
                     setVerificationCode("");
                     await sendVerification("email");
@@ -26,8 +44,11 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                 console.error("Verification failed", error);
             }
         };
-
         fetchData();
+
+        return () => {
+            isMounted = false;
+        };
     }, [verifiedPhone, verifiedEmail]);
 
     const sendVerification = async (type: string) => {
@@ -39,7 +60,7 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
         }
     };
 
-    const handleVerify = async (e: React.MouseEvent<HTMLButtonElement>, type: string) => {
+    const handleVerify = async (e: React.FormEvent<HTMLFormElement>, type: string) => {
         e.preventDefault();
         try {
             const response = await axios.post(`/users/verify/${type}/check`, {
@@ -50,7 +71,6 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                 setVerifiedPhone(true);
             } else {
                 setVerifiedEmail(true);
-                console.log(response.data.token);
                 onVerify(response.data.token);
                 localStorage.setItem("token", response.data.token);
             }
@@ -59,22 +79,129 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
         }
     };
     return (
-        (!verifiedPhone && !verifiedEmail && (
-            <div>
-                <h2>We sent a 6 digit verification code to your phone number.</h2>
-                <input type="text" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
-                <button onClick={(e) => handleVerify(e, "mobile")}>Verify Phone</button>
-                <button onClick={() => sendVerification("mobile")}>Send code again</button>
-            </div>
-        )) ||
-        (!verifiedEmail && verifiedPhone && (
-            <div>
-                <h2>We also sent a 6 digit verification code to your email address.</h2>
-                <input type="text" value={verificationCode} onChange={(e) => setVerificationCode(e.target.value)} />
-                <button onClick={(e) => handleVerify(e, "email")}>Verify Email</button>
-                <button onClick={() => sendVerification("email")}>Send code again</button>
-            </div>
-        )) || <div>Account is verified</div>
+        <Flex
+            css={{
+                height: "calc(100% - 11.5rem)",
+                boxSizing: "border-box",
+                paddingTop: "1rem",
+                width: "fit-content",
+                marginLeft: "auto",
+                marginRight: "auto",
+            }}
+        >
+            <FormRoot
+                onSubmit={(e) => handleVerify(e, !verifiedPhone && !verifiedEmail ? "mobile" : "email")}
+                css={{
+                    display: "flex",
+                    paddingTop: "3rem",
+                    flexDirection: "column",
+                    minWidth: 1000,
+                    gap: "0.4rem",
+                }}
+            >
+                {(!verifiedPhone && !verifiedEmail && (
+                    <>
+                        <VerifiedTitle>We sent a 6 digit verification code to your phone number.</VerifiedTitle>
+                        <InputContainer>
+                            <FormField
+                                name="code"
+                                css={{
+                                    paddingTop: "2em",
+                                    width: 150,
+                                    textAlign: "center",
+                                    marginBottom: "2em",
+                                }}
+                            >
+                                <Form.Control asChild>
+                                    <Input
+                                        type="number"
+                                        maxLength={6}
+                                        css={{ MozAppearance: "textfield", WebkitAppearance: "none" }}
+                                        value={verificationCode}
+                                        onChange={(e) => setVerificationCode(e.target.value)}
+                                    />
+                                </Form.Control>
+                            </FormField>
+                            <Form.Submit asChild>
+                                <Button
+                                    type="submit"
+                                    css={{
+                                        width: "fit-content",
+                                        alignSelf: "center",
+                                        padding: "0 1rem",
+                                    }}
+                                >
+                                    Verify Phone
+                                </Button>
+                            </Form.Submit>
+                            <Button
+                                type="button"
+                                css={{
+                                    width: "fit-content",
+                                    alignSelf: "center",
+                                    padding: "0 1rem",
+                                }}
+                                onClick={() => sendVerification("mobile")}
+                            >
+                                Send code again
+                            </Button>
+                        </InputContainer>
+                    </>
+                )) ||
+                    (verifiedPhone && !verifiedEmail && (
+                        <>
+                            <VerifiedTitle>
+                                We also sent a 6 digit verification code to your email address.
+                            </VerifiedTitle>
+                            <InputContainer>
+                                <FormField
+                                    name="code"
+                                    css={{
+                                        paddingTop: "2em",
+                                        width: 150,
+                                        textAlign: "center",
+                                        marginBottom: "2em",
+                                    }}
+                                >
+                                    <Form.Control asChild>
+                                        <Input
+                                            type="number"
+                                            maxLength={6}
+                                            css={{ MozAppearance: "textfield", WebkitAppearance: "none" }}
+                                            value={verificationCode}
+                                            onChange={(e) => setVerificationCode(e.target.value)}
+                                        />
+                                    </Form.Control>
+                                </FormField>
+                                <Form.Submit asChild>
+                                    <Button
+                                        type="submit"
+                                        css={{
+                                            width: "fit-content",
+                                            alignSelf: "center",
+                                            padding: "0 1rem",
+                                        }}
+                                    >
+                                        Verify email
+                                    </Button>
+                                </Form.Submit>
+                                <Button
+                                    type="button"
+                                    css={{
+                                        width: "fit-content",
+                                        alignSelf: "center",
+                                        padding: "0 1rem",
+                                    }}
+                                    onClick={() => sendVerification("email")}
+                                >
+                                    Send code again
+                                </Button>
+                            </InputContainer>
+                        </>
+                    )) ||
+                    (verifiedEmail && <div>Account is verified</div>)}
+            </FormRoot>
+        </Flex>
     );
 };
 

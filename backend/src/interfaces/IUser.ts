@@ -1,3 +1,5 @@
+import { Item } from "./Item";
+
 export interface IUser extends Document {
     username: string;
     password: string;
@@ -7,6 +9,7 @@ export interface IUser extends Document {
     phoneNumber: string;
     passcode: string | null;
     userAuthentication: UserAuthentication;
+    items: Array<Item>;
 }
 
 export interface UserAuthentication {

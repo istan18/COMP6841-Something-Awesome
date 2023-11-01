@@ -3,8 +3,3 @@ export interface Item {
     password: string;
     imageDataURL: string;
 }
-
-export interface ItemsDocument extends Document {
-    uId: string;
-    items: Item[];
-}

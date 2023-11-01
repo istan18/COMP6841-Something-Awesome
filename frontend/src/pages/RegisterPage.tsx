@@ -1,33 +1,24 @@
 import { useEffect } from "react";
 import Register from "../components/Register";
-import { useGlobalState } from "../GlobalStateContext";
 import { useNavigate } from "react-router-dom";
 
 const RegisterPage = () => {
-    const context = useGlobalState();
     const navigate = useNavigate();
-    const setGlobalState = context.setGlobalState;
+    const token = localStorage.getItem("token");
+    const uId = localStorage.getItem("uId");
 
     useEffect(() => {
-        if (context.globalState.uId && context.globalState.token) {
+        if (uId && token) {
             navigate("/");
         }
-    }, [context.globalState.uId, context.globalState.token]);
+    }, []);
 
     const handleRegister = (uId: string, key: string) => {
-        setGlobalState((state) => ({
-            ...state,
-            uId,
-            key,
-        }));
+        localStorage.setItem("uId", uId);
+        localStorage.setItem("key", key);
         navigate("/verify");
     };
-    return (
-        <div>
-            <Register onRegister={handleRegister} />
-            <button onClick={() => navigate("/login")}>Have an account? Log in</button>
-        </div>
-    );
+    return <Register onRegister={handleRegister} />;
 };
 
 export default RegisterPage;

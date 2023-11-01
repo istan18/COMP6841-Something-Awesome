@@ -5,7 +5,6 @@ import bcrypt from "bcrypt";
 
 export const verifyPassword = async (enteredPassword: string, realPassword: string): Promise<boolean> => {
     const validPassword = await bcrypt.compare(enteredPassword, realPassword);
-    console.log(validPassword);
     return validPassword;
 };
 

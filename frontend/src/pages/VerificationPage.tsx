@@ -7,14 +7,16 @@ const VerificationPage = () => {
     const context = useGlobalState();
     const navigate = useNavigate();
     const setGlobalState = context.setGlobalState;
+    const token = localStorage.getItem("token");
+    const uId = localStorage.getItem("uId");
 
     useEffect(() => {
-        if (context.globalState.uId && context.globalState.token) {
+        if (token && uId) {
             navigate("/");
-        } else if (!context.globalState.uId) {
+        } else if (!uId) {
             navigate("/login");
         }
-    }, [context.globalState.uId, context.globalState.token]);
+    }, [uId, token]);
 
     const onVerify = (token: string) => {
         setGlobalState((state) => ({
@@ -24,11 +26,7 @@ const VerificationPage = () => {
         navigate("/");
     };
 
-    return (
-        <div>
-            <Verify onVerify={onVerify} />
-        </div>
-    );
+    return <Verify onVerify={onVerify} />;
 };
 
 export default VerificationPage;

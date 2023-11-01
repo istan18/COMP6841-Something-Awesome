@@ -1,5 +1,4 @@
 import secureRandomPassword from "secure-random-password";
-import { GlobalStateContextValue } from "./GlobalStateContext";
 
 export const generateRandomPassword = () => {
     const password = secureRandomPassword.randomPassword({
@@ -76,19 +75,15 @@ export const getPasswordColor = (password: string) => {
 export const resetPasscodeTimeout = (
     setTimeoutId: (newTimeoutId: NodeJS.Timeout | null) => void,
     timeoutId: NodeJS.Timeout | null,
-    context: GlobalStateContextValue,
+    setAccess: (access: boolean) => void,
 ) => {
     if (timeoutId) {
         clearTimeout(timeoutId);
     }
 
     const newTimeoutId = setTimeout(() => {
-        context.setGlobalState((prev) => ({
-            ...prev,
-            token: null,
-            access: false,
-        }));
-    }, 1 * 60 * 1000); // 10 minutes in milliseconds
+        setAccess(false);
+    }, 1 * 60 * 1000);
 
     setTimeoutId(newTimeoutId);
 };

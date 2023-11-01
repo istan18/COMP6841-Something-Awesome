@@ -1,35 +1,60 @@
 import UserModel from "../models/userModel";
 import { type Request, type Response } from "express";
-import ItemsModel from "../models/itemsModel";
 import CryptoJS from "crypto-js";
+import { Item } from "../interfaces/Item";
+import axios from "axios";
 
 export const addItem = async (req: Request, res: Response): Promise<any> => {
     const { name, password, imageDataURL, key } = req.body;
     const user = req.user;
 
     if (!user) {
+        console.log("Unauthorized");
         return res.status(401).json({ message: "Unauthorized" });
     }
 
     const storedUser = await UserModel.findOne({ username: user.username });
     if (!storedUser) {
+        console.log("User not found");
         return res.status(404).json({ message: "User not found" });
     }
 
-    const usersItems = await ItemsModel.findOne({ uId: storedUser._id });
-    if (!usersItems) {
-        return res.status(404).json({ message: "User items not found" });
-    }
-
-    const itemExists = usersItems.items.find((item) => item.name === name);
+    const itemExists = storedUser.items.find((item) => item.name === name);
     if (itemExists) {
+        console.log("Item already exists");
         return res.status(409).json({ message: "Item already exists" });
     }
 
     const storedPassword = encryptPasswordWithKey(password, key);
 
-    usersItems.items.push({ name, password: storedPassword, imageDataURL });
-    await usersItems.save();
+    const defaultImg =
+        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdkzG3UVRcUvXp7w2EXvsO7pxF8ekas7Ynxp2ri2HAVeonZunC6INi0-cUiKFfOUnqHxU&usqp=CAU";
+    const imageUrlToDataUrl = async (imageUrl: string): Promise<string> => {
+        try {
+            const response = await axios.get(imageUrl, { responseType: "arraybuffer" });
+
+            const buffer = Buffer.from(response.data, "binary");
+            const dataUrl = `data:${response.headers["content-type"]};base64,${buffer.toString("base64")}`;
+
+            return dataUrl;
+        } catch (error) {
+            console.error("Error converting image URL to data URL", error);
+            throw error;
+        }
+    };
+
+    const finalImageDataURL = imageDataURL ? imageDataURL : await imageUrlToDataUrl(defaultImg);
+    console.log("finalImageDataURL", finalImageDataURL);
+
+    const item: Item = {
+        name,
+        password: storedPassword,
+        imageDataURL: finalImageDataURL,
+    };
+
+    storedUser.items.push(item);
+    await storedUser.save();
+    console.log("Item created");
 
     return res.status(201).json({ message: "Item created" });
 };
@@ -38,52 +63,49 @@ export const getItems = async (req: Request, res: Response): Promise<any> => {
     const user = req.user;
     const { key } = req.body;
     if (!user) {
+        console.log("Unauthorized");
         return res.status(401).json({ message: "Unauthorized" });
     }
+    console.log(key);
 
     const storedUser = await UserModel.findOne({ username: user.username });
     if (!storedUser) {
+        console.log("User not found");
         return res.status(404).json({ message: "User not found" });
     }
 
-    const usersItems = await ItemsModel.findOne({ uId: storedUser._id });
-    if (!usersItems) {
-        return res.status(404).json({ message: "User items not found" });
-    }
-
-    const copyItems = usersItems.items.map((item) => {
+    const copyItems = storedUser.items.map((item) => {
         const decryptedPassword = decryptPasswordWithKey(item.password, key);
-        return { ...item, password: decryptedPassword };
+        return { name: item.name, imageDataURL: item.imageDataURL, password: decryptedPassword };
     });
 
     return res.status(200).json({ items: copyItems });
 };
 
 export const deleteItem = async (req: Request, res: Response): Promise<any> => {
-    const { name } = req.body;
+    const name = req.params.name;
     const user = req.user;
     if (!user) {
+        console.log("Unauthorized");
         return res.status(401).json({ message: "Unauthorized" });
     }
 
     const storedUser = await UserModel.findOne({ username: user.username });
     if (!storedUser) {
+        console.log("User not found");
         return res.status(404).json({ message: "User not found" });
     }
 
-    const usersItems = await ItemsModel.findOne({ uId: storedUser._id });
-    if (!usersItems) {
-        return res.status(404).json({ message: "User items not found" });
-    }
-
-    const itemIndex = usersItems.items.findIndex((item) => item.name === name);
+    const itemIndex = storedUser.items.findIndex((item) => item.name === name);
     if (itemIndex === -1) {
+        console.log("Item not found", name);
         return res.status(404).json({ message: "Item not found" });
     }
 
-    usersItems.items.splice(itemIndex, 1);
+    console.log("Deleting: ", storedUser.items[itemIndex]);
+    storedUser.items.splice(itemIndex, 1);
 
-    await usersItems.save();
+    await storedUser.save();
 
     return res.status(200).json({ message: "Item deleted" });
 };
@@ -100,30 +122,25 @@ export const editItem = async (req: Request, res: Response): Promise<any> => {
         return res.status(404).json({ message: "User not found" });
     }
 
-    const usersItems = await ItemsModel.findOne({ uId: storedUser._id });
-    if (!usersItems) {
-        return res.status(404).json({ message: "User items not found" });
-    }
-
-    const itemIndex = usersItems.items.findIndex((item) => item.name === name);
+    const itemIndex = storedUser.items.findIndex((item) => item.name === name);
     if (itemIndex === -1) {
         return res.status(404).json({ message: "Item not found" });
     }
 
     if (password) {
         const storedPassword = encryptPasswordWithKey(password, key);
-        usersItems.items[itemIndex].password = storedPassword;
+        storedUser.items[itemIndex].password = storedPassword;
     }
 
     if (imageDataURL) {
-        usersItems.items[itemIndex].imageDataURL = imageDataURL;
+        storedUser.items[itemIndex].imageDataURL = imageDataURL;
     }
 
     if (name) {
-        usersItems.items[itemIndex].name = name;
+        storedUser.items[itemIndex].name = name;
     }
 
-    await usersItems.save();
+    await storedUser.save();
 
     return res.status(200).json({ message: "Item edited" });
 };

@@ -5,8 +5,8 @@ import { authenticateToken } from "../middleware/authentication";
 const router = express.Router();
 
 router.post("/add", authenticateToken, addItem);
-router.post("/edit", authenticateToken, getItems);
-router.delete("/delete", authenticateToken, deleteItem);
+router.post("/get", authenticateToken, getItems);
+router.delete("/delete/:name", authenticateToken, deleteItem);
 router.put("/edit", authenticateToken, editItem);
 
 export default router;

@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./PinPad.css";
-import { useGlobalState } from "../GlobalStateContext";
 import axios from "axios";
 import { resetPasscodeTimeout } from "../utils";
 
@@ -15,12 +14,20 @@ interface PasscodeProps {
     passcode: string | null;
     setTimeoutId: (newTimeoutId: NodeJS.Timeout | null) => void;
     timeoutId: NodeJS.Timeout | null;
+    setHasPasscode: (hasPasscode: boolean) => void;
+    setAccess: (access: boolean) => void;
 }
 
-// passcode is the real passcode
-// passcodeState is the passcode that is being entered
-const Pinpad: React.FC<PasscodeProps> = ({ setPasscode, passcode, text, setTimeoutId, timeoutId }) => {
-    const context = useGlobalState();
+const Pinpad: React.FC<PasscodeProps> = ({
+    setHasPasscode,
+    setPasscode,
+    passcode,
+    text,
+    setTimeoutId,
+    timeoutId,
+    setAccess,
+}) => {
+    const token = localStorage.getItem("token");
     const [passcodeState, setPasscodeState] = useState<PasscodeState>({ value: "", passCode: "------" });
     const pressButton = (number: string) => {
         if (parseInt(number) >= 0 && parseInt(number) <= 9) {
@@ -30,16 +37,17 @@ const Pinpad: React.FC<PasscodeProps> = ({ setPasscode, passcode, text, setTimeo
             }));
 
             if (passcodeState.value.length + 1 === 6) {
+                const enteredPasscode = passcodeState.value + number;
                 if (text === "Set PIN code") {
-                    setPasscode(passcodeState.value + number);
+                    setPasscode(enteredPasscode);
                 } else if (text === "Verify PIN code") {
                     if (passcodeState.value + number === passcode) {
-                        save();
+                        save(enteredPasscode);
                     } else {
                         setPasscode(null);
                     }
                 } else if (text === "Enter PIN") {
-                    verifyPasscode(number);
+                    verifyPasscode(enteredPasscode);
                 }
                 clear();
             }
@@ -51,57 +59,45 @@ const Pinpad: React.FC<PasscodeProps> = ({ setPasscode, passcode, text, setTimeo
         }
     };
 
-    const verifyPasscode = async (number: string) => {
+    const verifyPasscode = async (enteredPasscode: string) => {
         try {
             const response = await axios.post(
                 "/users/passcode/verify",
-                { passcode: passcodeState.value + number },
+                { passcode: enteredPasscode },
                 {
                     headers: {
-                        Authorization: `Bearer ${context.globalState.token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 },
             );
+            setHasPasscode(true);
             if (response) {
-                context.setGlobalState((prev) => ({
-                    ...prev,
-                    access: true,
-                }));
-                resetPasscodeTimeout(setTimeoutId, timeoutId, context);
+                setAccess(true);
+                resetPasscodeTimeout(setTimeoutId, timeoutId, setAccess);
             }
         } catch (error) {
             console.error("Verify passcode failed", error);
         }
     };
 
-    const getPassCodeFromValue = (val: string): string => {
-        let res = "";
-        for (let i = 0; i < val.length; i++) {
-            res += "*";
-        }
-        while (res.length < 6) {
-            res += "-";
-        }
-        return res;
-    };
+    const getPassCodeFromValue = (val: string): string =>
+        "*".repeat(Math.min(val.length, 6)) + "-".repeat(Math.max(0, 6 - val.length));
 
-    const save = async () => {
+    const save = async (enteredPasscode: string) => {
         try {
             const response = await axios.post(
                 "/users/passcode",
-                { passcode: passcodeState.value },
+                { passcode: enteredPasscode },
                 {
                     headers: {
-                        Authorization: `Bearer ${context.globalState.token}`,
+                        Authorization: `Bearer ${token}`,
                     },
                 },
             );
-            setPasscode(passcodeState.value);
-            context.setGlobalState((prev) => ({
-                ...prev,
-                access: true,
-            }));
-            resetPasscodeTimeout(setTimeoutId, timeoutId, context);
+            setPasscode(enteredPasscode);
+            setAccess(true);
+            setHasPasscode(true);
+            resetPasscodeTimeout(setTimeoutId, timeoutId, setAccess);
             console.log(response);
         } catch (error) {
             console.error("Save passcode failed", error);

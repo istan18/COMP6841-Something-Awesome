@@ -1,5 +1,6 @@
 import mongoose, { Schema } from "mongoose";
 import type { IUser, UserAuthentication } from "../interfaces/IUser";
+import ItemSchema from "./itemsModel";
 
 const userAuthenticationSchema = new Schema<UserAuthentication>({
     loginAttempts: { type: Number, default: 0 },
@@ -14,6 +15,7 @@ const userSchema = new Schema<IUser>({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
     phoneNumber: { type: String, required: true },
+    passcode: { type: String, default: null },
     email: { type: String, required: true },
     userAuthentication: {
         type: userAuthenticationSchema,
@@ -24,6 +26,7 @@ const userSchema = new Schema<IUser>({
             resetTokenExpires: null,
         },
     },
+    items: { type: [ItemSchema], default: [] },
 });
 
 const UserModel = mongoose.model<IUser>("User", userSchema);

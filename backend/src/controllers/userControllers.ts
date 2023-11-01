@@ -23,6 +23,11 @@ interface RegisterRes {
     captcha: string;
 }
 
+const keyDerivationFunction = (password: string, salt: string): string => {
+    const key = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 1000 });
+    return key.toString();
+};
+
 const verifyCaptcha = async (recaptchaValue: string): Promise<boolean> => {
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     const verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaValue}`;
@@ -41,7 +46,6 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
         const { username, password, email, firstName, lastName, phoneNumber, captcha } = req.body as RegisterRes;
 
         const existingEmailUser = await UserModel.findOne({ email });
-        console.log("hi");
         if (existingEmailUser) {
             console.log("Email is already in use");
             return res.status(400).json({ error: "Email is already in use" });
@@ -68,7 +72,7 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
             return res.status(401).json({ error: "Invalid captcha" });
         } else {
             console.log("Valid captcha");
-            const key = CryptoJS.AES.encrypt(password, process.env.PASSWORD_GEN_KEY as string).toString();
+            const key = keyDerivationFunction(password, process.env.PASSWORD_GEN_KEY as string);
             return res
                 .status(201)
                 .json({ message: "User registered successfully", uId: user._id.toString(), locked: false, key });
@@ -105,7 +109,7 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
         user.userAuthentication.lockUntil = null;
         await user.save();
         console.log("Login successful");
-        const key = CryptoJS.AES.encrypt(password, process.env.PASSWORD_GEN_KEY as string).toString();
+        const key = keyDerivationFunction(password, process.env.PASSWORD_GEN_KEY as string);
         return res.status(201).json({ message: "Login successful", uId: user._id.toString(), key, locked: false });
     } catch (error: any) {
         console.error(error);
@@ -208,7 +212,7 @@ export const sendEmailVerificationCode = async (req: Request, res: Response): Pr
         if (error) {
             return res.status(500).send(error.toString());
         }
-        console.log("Email code verified successfully");
+        console.log("Email code sent successfully");
         res.status(200).json({ message: "Code sent successfully" });
     });
 };
@@ -243,6 +247,7 @@ export const getPasscode = async (req: Request, res: Response): Promise<any> => 
     }
 
     const passcode = user.passcode;
+    console.log(passcode);
 
     if (!passcode) {
         return res.status(401).json({ error: "No passcode set" });
@@ -268,6 +273,7 @@ export const setPasscode = async (req: Request, res: Response): Promise<any> => 
     }
 
     const hashedPasscode = await bcrypt.hash(passcode, 10);
+    console.log(passcode, hashedPasscode);
     storedUser.passcode = hashedPasscode;
     await storedUser.save();
 

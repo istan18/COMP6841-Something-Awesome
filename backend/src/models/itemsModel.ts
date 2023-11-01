@@ -1,6 +1,6 @@
-import mongoose, { Schema } from "mongoose";
+import { Schema } from "mongoose";
 
-import type { Item, ItemsDocument } from "../interfaces/Item";
+import type { Item } from "../interfaces/Item";
 
 const ItemSchema = new Schema<Item>({
     name: { type: String, required: true },
@@ -8,11 +8,4 @@ const ItemSchema = new Schema<Item>({
     imageDataURL: { type: String, default: null },
 });
 
-const ItemsSchema = new Schema<ItemsDocument>({
-    uId: { type: String, required: true },
-    items: { type: [ItemSchema], required: true },
-});
-
-const ItemsModel = mongoose.model<ItemsDocument>("Items", ItemsSchema);
-
-export default ItemsModel;
+export default ItemSchema;
