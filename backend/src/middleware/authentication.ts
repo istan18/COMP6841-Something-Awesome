@@ -18,14 +18,12 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
 
     jwt.verify(token, process.env.JWT_SECRET as string, async (err: any, decoded: string | JwtPayload | undefined) => {
         if (err) {
-            console.log("token is invalid");
-            res.status(403).json({ error: "Invalid token" });
+            res.status(498).json({ error: "Invalid token" });
             return;
         }
 
         const user = await User.findById((decoded as JwtPayload).userId);
         if (!user) {
-            console.log("Invalid id");
             res.status(400).json({ error: "Invalid id" });
             return;
         }
@@ -42,14 +40,12 @@ export const trackLoginAttempts = async (req: Request, res: Response, next: Next
         if (user) {
             // Check if the account is currently locked
             if (user.userAuthentication.lockUntil && user.userAuthentication.lockUntil > new Date()) {
-                console.log("Account locked");
                 return res.status(401).json({ error: "Account locked. Try again later.", locked: true });
             }
 
             const validPassword = await verifyPassword(password, user.password);
 
             if (!validPassword) {
-                console.log(user.userAuthentication.loginAttempts);
                 user.userAuthentication.loginAttempts += 1;
 
                 if (user.userAuthentication.loginAttempts >= 5) {
@@ -63,7 +59,6 @@ export const trackLoginAttempts = async (req: Request, res: Response, next: Next
 
         next();
     } catch (error) {
-        console.error("Error tracking login attempts:", error);
         res.status(500).json({ error: "Internal server error" });
     }
 };

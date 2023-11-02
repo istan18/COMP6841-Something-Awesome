@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PinPad from "../components/PinPad";
 import axios from "axios";
@@ -11,26 +11,32 @@ const HomePage = () => {
     const [passcode, setPasscode] = useState<string | null>(null);
     const [hasPasscode, setHasPasscode] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
-    const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
     const token = localStorage.getItem("token");
     const uId = localStorage.getItem("uId");
+    const timeoutIdRef = useRef<NodeJS.Timeout | null>(null);
 
     useEffect(() => {
-        resetPasscodeTimeout(setTimeoutId, timeoutId, setAccess);
+        // resetPasscodeTimeout(setTimeoutId, timeoutId, setAccess);
 
         const resetTimeoutOnActivity = () => {
-            resetPasscodeTimeout(setTimeoutId, timeoutId, setAccess);
+            resetPasscodeTimeout(timeoutIdRef, setAccess);
         };
 
         window.addEventListener("mousemove", resetTimeoutOnActivity);
         window.addEventListener("keydown", resetTimeoutOnActivity);
+        window.addEventListener("click", resetTimeoutOnActivity);
+        window.addEventListener("scroll", resetTimeoutOnActivity);
+        window.addEventListener("resize", resetTimeoutOnActivity);
 
         return () => {
-            if (timeoutId) {
-                clearTimeout(timeoutId);
+            if (timeoutIdRef.current) {
+                clearTimeout(timeoutIdRef.current);
             }
             window.removeEventListener("mousemove", resetTimeoutOnActivity);
             window.removeEventListener("keydown", resetTimeoutOnActivity);
+            window.removeEventListener("click", resetTimeoutOnActivity);
+            window.removeEventListener("scroll", resetTimeoutOnActivity);
+            window.removeEventListener("resize", resetTimeoutOnActivity);
         };
     }, []);
 
@@ -58,8 +64,13 @@ const HomePage = () => {
             });
             setPasscode(response.data.passcode);
             setHasPasscode(true);
-        } catch (error) {
-            console.log(error);
+        } catch (error: any) {
+            if (error.response.status === 498) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("key");
+                localStorage.removeItem("uId");
+                navigate("/login");
+            }
         }
         setLoading(false);
     };
@@ -77,8 +88,7 @@ const HomePage = () => {
                     setAccess={setAccess}
                     passcode={passcode}
                     text={hasPasscode ? "Enter PIN" : passcode ? "Verify PIN code" : "Set PIN code"}
-                    setTimeoutId={setTimeoutId}
-                    timeoutId={timeoutId}
+                    timeoutIdRef={timeoutIdRef}
                 ></PinPad>
             ))) || <div></div>
     );

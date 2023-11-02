@@ -1,3 +1,5 @@
 {
-  "PORT": 3001
+  "PORT": 3001,
+  "PROD_URL": "https://pwmanager-api.onrender.com",
+  "DEV_URL": "http://localhost"
 }

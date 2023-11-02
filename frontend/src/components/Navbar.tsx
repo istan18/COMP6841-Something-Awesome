@@ -5,7 +5,6 @@ import Flex from "./primitives/Flex";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import React from "react";
-import { useGlobalState } from "../GlobalStateContext";
 
 const NavigationBar = styled("nav", {
     display: "flex",
@@ -28,7 +27,6 @@ const LogoContainer = styled(Flex, {
 });
 
 const Navbar = () => {
-    const context = useGlobalState();
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
     const uId = localStorage.getItem("uId");
@@ -45,10 +43,15 @@ const Navbar = () => {
                 localStorage.removeItem("token");
                 localStorage.removeItem("uId");
                 localStorage.removeItem("key");
-                context.setGlobalState({ access: false });
 
                 console.log("Sign out successful");
-            } catch (error) {
+            } catch (error: any) {
+                if (error.response.status === 498) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("key");
+                    localStorage.removeItem("uId");
+                    navigate("/login");
+                }
                 console.log(error);
             }
         }

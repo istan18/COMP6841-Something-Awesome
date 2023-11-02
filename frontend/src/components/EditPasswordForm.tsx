@@ -10,21 +10,27 @@ import { fileToDataUrl, handleGeneratePassword } from "../utils";
 import { styled } from "@stitches/react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import ChangeIcon from "../icons/ChangeIcon";
 
 const PasswordContainer = styled(Flex, {
     gap: "1rem",
 });
 
-interface AddPasswordFormProps {
+interface Item {
+    name: string;
+    password: string;
+    imageDataURL: string;
+}
+interface EditPasswordFormProps {
     setUpdate: (update: boolean) => void;
     update: boolean;
+    item: Item;
 }
 
-const AddPasswordForm: React.FC<AddPasswordFormProps> = ({ setUpdate, update }) => {
+const EditPasswordForm: React.FC<EditPasswordFormProps> = ({ setUpdate, update, item }) => {
     const token = localStorage.getItem("token");
     const key = localStorage.getItem("key");
     const [password, setPassword] = useState("");
-    const [name, setName] = useState("");
     const [url, setURL] = useState<File | null>(null);
     const navigate = useNavigate();
 
@@ -34,9 +40,8 @@ const AddPasswordForm: React.FC<AddPasswordFormProps> = ({ setUpdate, update }) 
 
         try {
             await axios.post(
-                "/items/add",
+                `/items/edit/${item.name}`,
                 {
-                    name,
                     password,
                     imageDataURL: image,
                     key,
@@ -61,7 +66,19 @@ const AddPasswordForm: React.FC<AddPasswordFormProps> = ({ setUpdate, update }) 
     return (
         <Dialog.Root>
             <Dialog.Trigger asChild>
-                <Button css={{ marginLeft: "auto" }}>Add password</Button>
+                <button
+                    style={{
+                        border: "none",
+                        background: "none",
+                        cursor: "pointer",
+                        outline: "none",
+                        padding: "0",
+                        margin: "0",
+                    }}
+                >
+                    <ChangeIcon />
+                </button>
+                {/* <Button css={{ marginLeft: "auto" }}>Edit password</Button> */}
             </Dialog.Trigger>
             <Dialog.Portal>
                 <DialogOverlay />
@@ -73,7 +90,7 @@ const AddPasswordForm: React.FC<AddPasswordFormProps> = ({ setUpdate, update }) 
                             justifyContent: "space-between",
                         }}
                     >
-                        <DialogTitle>Add your password</DialogTitle>
+                        <DialogTitle>Edit your password</DialogTitle>
                         <Dialog.Close asChild>
                             <IconButton aria-label="Close">
                                 <Cross2Icon />
@@ -89,16 +106,6 @@ const AddPasswordForm: React.FC<AddPasswordFormProps> = ({ setUpdate, update }) 
                                 gap: ".5rem",
                             }}
                         >
-                            <FormField name="name">
-                                <Form.Control asChild>
-                                    <Input
-                                        type="text"
-                                        value={name}
-                                        onChange={(e) => setName(e.target.value)}
-                                        placeholder="Name/Link"
-                                    />
-                                </Form.Control>
-                            </FormField>
                             <PasswordContainer>
                                 <FormField name="password">
                                     <Form.Control asChild>
@@ -133,7 +140,7 @@ const AddPasswordForm: React.FC<AddPasswordFormProps> = ({ setUpdate, update }) 
                                         padding: "0 1.5rem",
                                     }}
                                 >
-                                    Add
+                                    Save
                                 </Button>
                             </Form.Submit>
                         </FormRoot>
@@ -144,4 +151,4 @@ const AddPasswordForm: React.FC<AddPasswordFormProps> = ({ setUpdate, update }) 
     );
 };
 
-export default AddPasswordForm;
+export default EditPasswordForm;

@@ -7,6 +7,7 @@ import RemoveIcon from "../icons/RemoveIcon";
 import Flex from "./primitives/Flex";
 import React, { MouseEventHandler, useState } from "react";
 import axios from "axios";
+import EditPasswordForm from "./EditPasswordForm";
 
 const Container = styled("div", {
     display: "flex",
@@ -56,15 +57,14 @@ const PasswordEntry: React.FC<PasswordEntryProps> = ({ item, setUpdate, update }
     const [view, setView] = useState(false);
     const handleDelete = async () => {
         try {
-            const response = await axios.delete(`/items/delete/${item.name}`, {
+            await axios.delete(`/items/delete/${item.name}`, {
                 headers: {
                     Authorization: `Bearer ${localStorage.getItem("token")}`,
                 },
             });
-            console.log(response);
             setUpdate(!update);
         } catch (error) {
-            console.log(error);
+            alert(error);
         }
     };
     return (
@@ -76,7 +76,7 @@ const PasswordEntry: React.FC<PasswordEntryProps> = ({ item, setUpdate, update }
                     {view ? item.password : representPasswordAsAsteriks(item.password)}
                     <PasswordFunctionalities>
                         <RevealIcon onClick={() => setView(!view)} />
-                        <ChangeIcon />
+                        <EditPasswordForm item={item} setUpdate={setUpdate} update={update} />
                         <RemoveIcon onClick={(_e) => handleDelete()} />
                     </PasswordFunctionalities>
                 </RightContainer>

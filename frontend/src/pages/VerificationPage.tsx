@@ -1,12 +1,9 @@
 import Verify from "../components/Verify";
 import { useNavigate } from "react-router-dom";
-import { useGlobalState } from "../GlobalStateContext";
 import { useEffect } from "react";
 
 const VerificationPage = () => {
-    const context = useGlobalState();
     const navigate = useNavigate();
-    const setGlobalState = context.setGlobalState;
     const token = localStorage.getItem("token");
     const uId = localStorage.getItem("uId");
 
@@ -19,10 +16,7 @@ const VerificationPage = () => {
     }, [uId, token]);
 
     const onVerify = (token: string) => {
-        setGlobalState((state) => ({
-            ...state,
-            token,
-        }));
+        localStorage.setItem("token", token);
         navigate("/");
     };
 

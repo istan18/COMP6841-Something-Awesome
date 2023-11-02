@@ -51,7 +51,7 @@ export const handleGeneratePassword = (
             alert("Password: " + newPassword + " has been copied to clipboard");
         },
         (err) => {
-            console.error("Could not copy text: ", err);
+            alert("Could not copy password to clipboard: " + err);
         },
     );
 };
@@ -73,19 +73,18 @@ export const getPasswordColor = (password: string) => {
 };
 
 export const resetPasscodeTimeout = (
-    setTimeoutId: (newTimeoutId: NodeJS.Timeout | null) => void,
-    timeoutId: NodeJS.Timeout | null,
+    timeoutIdRef: React.MutableRefObject<NodeJS.Timeout | null>,
     setAccess: (access: boolean) => void,
 ) => {
-    if (timeoutId) {
-        clearTimeout(timeoutId);
+    if (timeoutIdRef.current) {
+        clearTimeout(timeoutIdRef.current);
     }
 
     const newTimeoutId = setTimeout(() => {
         setAccess(false);
     }, 1 * 60 * 1000);
 
-    setTimeoutId(newTimeoutId);
+    timeoutIdRef.current = newTimeoutId;
 };
 
 export const fileToDataUrl = (file: File | null) => {

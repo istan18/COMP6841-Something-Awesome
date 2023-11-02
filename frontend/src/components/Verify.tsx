@@ -22,6 +22,8 @@ const InputContainer = styled(Flex, {
 });
 
 const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
+    const [buttonDisabled, setButtonDisabled] = useState(false);
+
     const [verifiedPhone, setVerifiedPhone] = useState(false);
     const [verifiedEmail, setVerifiedEmail] = useState(false);
     const uId = localStorage.getItem("uId");
@@ -41,7 +43,7 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                     await sendVerification("email");
                 }
             } catch (error) {
-                console.error("Verification failed", error);
+                alert(error);
             }
         };
         fetchData();
@@ -52,11 +54,17 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
     }, [verifiedPhone, verifiedEmail]);
 
     const sendVerification = async (type: string) => {
-        try {
-            const response = await axios.post(`/users/verify/${type}/send`, { uId });
-            console.log(response);
-        } catch (error: any) {
-            console.error("Send verification failed", error.response.data);
+        if (!buttonDisabled) {
+            try {
+                await axios.post(`/users/verify/${type}/send`, { uId });
+            } catch (error: any) {
+                alert(error.response.data);
+            }
+            setButtonDisabled(true);
+
+            setTimeout(() => {
+                setButtonDisabled(false);
+            }, 30000); // 30,000 milliseconds = 30 seconds
         }
     };
 
@@ -75,7 +83,7 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                 localStorage.setItem("token", response.data.token);
             }
         } catch (error: any) {
-            console.error("Verify failed", error.response.data);
+            alert(error);
         }
     };
     return (
@@ -135,6 +143,7 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                                 </Button>
                             </Form.Submit>
                             <Button
+                                disabled={buttonDisabled}
                                 type="button"
                                 css={{
                                     width: "fit-content",
@@ -186,6 +195,7 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                                     </Button>
                                 </Form.Submit>
                                 <Button
+                                    disabled={buttonDisabled}
                                     type="button"
                                     css={{
                                         width: "fit-content",

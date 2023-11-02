@@ -17,9 +17,8 @@ const ResetPage = () => {
             await axios.post("/users/reset", {
                 email,
             });
-            console.log("Reset email sent");
         } catch (error) {
-            console.error(error);
+            alert(error);
         }
         alert("If the email is valid, check it for the reset link");
     };
@@ -27,20 +26,20 @@ const ResetPage = () => {
     const handleResetPassword = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
         if (getPasswordStrength(password) !== "good" || getPasswordStrength(password) != "strong") {
-            console.error("Password is not secure enough");
+            alert("Password is not secure enough");
             return;
         } else if (password !== confirmPassword) {
-            console.error("Passwords do not match");
+            alert("Passwords do not match");
             return;
         }
         try {
             await axios.post(`/users/reset/${token}`, {
                 password,
             });
-            alert("Password reset successfully");
+            alert("Password reset successful");
             navigate("/login");
         } catch (error) {
-            console.log(error);
+            alert(error);
         }
     };
     return !token ? (

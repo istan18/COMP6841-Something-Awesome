@@ -36,7 +36,6 @@ const verifyCaptcha = async (recaptchaValue: string): Promise<boolean> => {
         const response = await axios.post(verificationUrl);
         return response.data.success;
     } catch (error: any) {
-        console.error("reCAPTCHA verification failed:", error.message);
         return false;
     }
 };
@@ -47,19 +46,16 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
 
         const existingEmailUser = await UserModel.findOne({ email });
         if (existingEmailUser) {
-            console.log("Email is already in use");
             return res.status(400).json({ error: "Email is already in use" });
         }
 
         const existingUsernameUser = await UserModel.findOne({ username });
         if (existingUsernameUser) {
-            console.log("Username is already in use");
             return res.status(400).json({ error: "Username is already in use" });
         }
 
         const existingPhoneNumberUser = await UserModel.findOne({ phoneNumber });
         if (existingPhoneNumberUser) {
-            console.log("Phone number is already in use");
             return res.status(400).json({ error: "Phone number is already in use" });
         }
 
@@ -68,17 +64,14 @@ export const registerUser = async (req: Request, res: Response): Promise<any> =>
         await user.save();
 
         if (!verifyCaptcha(captcha)) {
-            console.log("Invalid captcha");
             return res.status(401).json({ error: "Invalid captcha" });
         } else {
-            console.log("Valid captcha");
             const key = keyDerivationFunction(password, process.env.PASSWORD_GEN_KEY as string);
             return res
                 .status(201)
                 .json({ message: "User registered successfully", uId: user._id.toString(), locked: false, key });
         }
     } catch (error: any) {
-        console.error(error);
         return res.status(500).json({ error: error.message });
     }
 };
@@ -89,30 +82,25 @@ export const loginUser = async (req: Request, res: Response): Promise<any> => {
         const user = await UserModel.findOne({ username });
 
         if (user == null) {
-            console.log("Invalid username or password");
             return res.status(401).json({ error: "Invalid username or password", locked: false });
         }
 
         const isCorrect = await verifyPassword(password, user.password);
         if (!isCorrect) {
-            console.log("Invalid username or password");
             return res.status(401).json({ error: "Invalid username or password", locked: false });
         }
 
         const isCaptchaValid = await verifyCaptcha(captcha);
         if (!isCaptchaValid) {
-            console.log("Invalid captcha");
             return res.status(401).json({ error: "Invalid captcha", locked: false });
         }
 
         user.userAuthentication.loginAttempts = 0;
         user.userAuthentication.lockUntil = null;
         await user.save();
-        console.log("Login successful");
         const key = keyDerivationFunction(password, process.env.PASSWORD_GEN_KEY as string);
         return res.status(201).json({ message: "Login successful", uId: user._id.toString(), key, locked: false });
     } catch (error: any) {
-        console.error(error);
         return res.status(500).json({ error: error.message });
     }
 };
@@ -122,25 +110,47 @@ export const sendMobileVerificationCode = async (req: Request, res: Response): P
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const serviceSid = process.env.TWILIO_SERVICE_SID as string;
     const twilioClient = twilio(accountSid, authToken);
+
+    const maxRetries = 3;
+    const initialDelay = 1000; // 1 second
+    let currentRetry = 0;
+
+    const { uId } = req.body;
+
     try {
-        const { uId } = req.body;
         const user = await UserModel.findById(uId);
+
         if (!user) {
-            console.log("Invalid id");
             return res.status(400).json({ error: "Invalid id" });
         }
 
         const phoneNumber = user.phoneNumber;
 
-        const verification = await twilioClient.verify.v2.services(serviceSid).verifications.create({
-            to: phoneNumber as string,
-            channel: "sms",
-        });
+        const sendVerificationCode = async () => {
+            const verification = await twilioClient.verify.v2.services(serviceSid).verifications.create({
+                to: phoneNumber as string,
+                channel: "sms",
+            });
 
-        console.log("Sent verification code");
-        return res.status(201).json({ message: "Sent verification code", code: verification.sid });
+            return res.status(201).json({ message: "Sent verification code", code: verification.sid });
+        };
+
+        const retryWithExponentialBackoff = async () => {
+            try {
+                await sendVerificationCode();
+            } catch (err: any) {
+                if (currentRetry < maxRetries) {
+                    currentRetry++;
+                    const delay = initialDelay * 2 ** currentRetry;
+                    setTimeout(retryWithExponentialBackoff, delay);
+                } else {
+                    return res.status(500).json({ error: err.message });
+                }
+            }
+        };
+
+        await retryWithExponentialBackoff();
     } catch (err: any) {
-        console.log("Error sending verification code:", err.message);
         return res.status(500).json({ error: err.message });
     }
 };
@@ -154,7 +164,6 @@ export const checkMobileVerificationCode = async (req: Request, res: Response): 
         const { code, uId } = req.body;
         const user = await UserModel.findById(uId);
         if (!user) {
-            console.log("Invalid id");
             return res.status(400).json({ error: "Invalid id" });
         }
 
@@ -165,14 +174,11 @@ export const checkMobileVerificationCode = async (req: Request, res: Response): 
         });
 
         if (verificationCheck.status === "approved") {
-            console.log("Code verified successfully");
             return res.status(201).json({ message: "Code verified successfully" });
         } else {
-            console.log("Invalid code");
             return res.status(401).json({ error: "Invalid code" });
         }
     } catch (err: any) {
-        console.error("Error checking verification code:", err.message);
         return res.status(500).json({ error: err.message });
     }
 };
@@ -191,7 +197,6 @@ export const sendEmailVerificationCode = async (req: Request, res: Response): Pr
     const { uId } = req.body;
     const user = await UserModel.findById(uId);
     if (!user) {
-        console.log("Invalid id");
         return res.status(400).json({ error: "Invalid id" });
     }
     const email = user.email;
@@ -212,7 +217,6 @@ export const sendEmailVerificationCode = async (req: Request, res: Response): Pr
         if (error) {
             return res.status(500).send(error.toString());
         }
-        console.log("Email code sent successfully");
         res.status(200).json({ message: "Code sent successfully" });
     });
 };
@@ -221,7 +225,6 @@ export const checkEmailVerificationCode = async (req: Request, res: Response): P
     const { uId, code } = req.body;
     const user = await UserModel.findById(uId);
     if (!user) {
-        console.log("Invalid id");
         return res.status(400).json({ error: "Invalid id" });
     }
 
@@ -235,19 +238,16 @@ export const checkEmailVerificationCode = async (req: Request, res: Response): P
     codeMap.delete(email);
 
     const token = generateToken(user._id.toString());
-    console.log("Email code verified successfully");
     res.status(201).json({ message: "Code verified successfully", token });
 };
 
 export const getPasscode = async (req: Request, res: Response): Promise<any> => {
     const user = req.user;
     if (!user) {
-        console.log("Invalid id");
         return res.status(400).json({ error: "Invalid id" });
     }
 
     const passcode = user.passcode;
-    console.log(passcode);
 
     if (!passcode) {
         return res.status(401).json({ error: "No passcode set" });
@@ -259,7 +259,6 @@ export const getPasscode = async (req: Request, res: Response): Promise<any> => 
 export const setPasscode = async (req: Request, res: Response): Promise<any> => {
     const user = req.user;
     if (!user) {
-        console.log("Invalid id");
         return res.status(400).json({ error: "Invalid id" });
     }
 
@@ -268,12 +267,10 @@ export const setPasscode = async (req: Request, res: Response): Promise<any> => 
 
     const storedUser = await UserModel.findOne({ username });
     if (!storedUser) {
-        console.log("Invalid id");
         return res.status(400).json({ error: "Invalid id" });
     }
 
     const hashedPasscode = await bcrypt.hash(passcode, 10);
-    console.log(passcode, hashedPasscode);
     storedUser.passcode = hashedPasscode;
     await storedUser.save();
 
@@ -284,25 +281,20 @@ export const verifyPasscode = async (req: Request, res: Response): Promise<any> 
     const { passcode } = req.body;
     const user = req.user;
     if (!user) {
-        console.log("Invalid id");
         return res.status(400).json({ error: "Invalid id" });
     }
 
     const storedUser = await UserModel.findOne({ username: user.username });
     if (!storedUser) {
-        console.log("Invalid id");
         return res.status(400).json({ error: "Invalid id" });
     }
 
     if (!storedUser.passcode) {
-        console.log("No passcode set");
         return res.status(401).json({ error: "No passcode set" });
     }
 
     const isCorrect = await verifyPassword(passcode, storedUser.passcode);
-    console.log(passcode, storedUser.passcode);
     if (!isCorrect) {
-        console.log("Invalid passcode");
         return res.status(401).json({ error: "Invalid passcode" });
     }
 
@@ -328,8 +320,7 @@ export const sendForgotPassword = async (req: Request, res: Response): Promise<a
         await sendResetEmail(email, token);
         res.json({ message: "Reset email sent successfully." });
     } catch (error) {
-        console.error("Error sending reset email", error);
-        res.status(500).json({ error: "Internal Server Error" });
+        res.status(500).json({ error: "Failed to send reset email" });
     }
 };
 

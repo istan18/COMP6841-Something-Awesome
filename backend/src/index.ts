@@ -19,28 +19,26 @@ declare global {
 
 dotenv.config();
 const uri: string | undefined = process.env.MONGODB_URI;
-console.log(uri);
 
 const app = express();
-const port = 3001;
+const port = process.env.PORT || 3000;
 
 if (uri == null) {
     console.error("Please specify the MongoDB connection string in .env");
     process.exit(1);
 }
 
-const allowedOrigins = ["http://localhost:3000", "http://localhost:3002"];
-const corsOptions: cors.CorsOptions = {
-    origin: (origin, callback) => {
-        if (allowedOrigins.indexOf(origin!) !== -1 || !origin) {
-            callback(null, true);
-        } else {
-            callback(new Error("Not allowed by CORS"));
-        }
-    },
-};
-
-app.use(cors(corsOptions));
+// const allowedOrigins = ["http://localhost:3000", "http://localhost:3002"];
+// const corsOptions: cors.CorsOptions = {
+//     origin: (origin, callback) => {
+//         if (allowedOrigins.indexOf(origin!) !== -1 || !origin) {
+//             callback(null, true);
+//         } else {
+//             callback(new Error("Not allowed by CORS"));
+//         }
+//     },
+// };
+// app.use(cors(corsOptions));
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {

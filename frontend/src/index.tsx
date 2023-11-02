@@ -4,7 +4,17 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import axios from "axios";
 import BACKEND from "./config.json";
-axios.defaults.baseURL = `http://localhost:${BACKEND.PORT}`;
+import { disableReactDevTools } from "@fvilers/disable-react-devtools";
+
+if (process.env.NODE_ENV === "production") {
+    disableReactDevTools();
+}
+
+if (process.env.NODE_ENV === "production") {
+    axios.defaults.baseURL = BACKEND.PROD_URL;
+} else {
+    axios.defaults.baseURL = `http://localhost:${BACKEND.PORT}`;
+}
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
 root.render(

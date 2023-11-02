@@ -12,21 +12,12 @@ interface PasscodeProps {
     setPasscode: (passcode: string | null) => void;
     text: string;
     passcode: string | null;
-    setTimeoutId: (newTimeoutId: NodeJS.Timeout | null) => void;
-    timeoutId: NodeJS.Timeout | null;
     setHasPasscode: (hasPasscode: boolean) => void;
     setAccess: (access: boolean) => void;
+    timeoutIdRef: React.MutableRefObject<NodeJS.Timeout | null>;
 }
 
-const Pinpad: React.FC<PasscodeProps> = ({
-    setHasPasscode,
-    setPasscode,
-    passcode,
-    text,
-    setTimeoutId,
-    timeoutId,
-    setAccess,
-}) => {
+const Pinpad: React.FC<PasscodeProps> = ({ setHasPasscode, setPasscode, passcode, text, timeoutIdRef, setAccess }) => {
     const token = localStorage.getItem("token");
     const [passcodeState, setPasscodeState] = useState<PasscodeState>({ value: "", passCode: "------" });
     const pressButton = (number: string) => {
@@ -73,10 +64,10 @@ const Pinpad: React.FC<PasscodeProps> = ({
             setHasPasscode(true);
             if (response) {
                 setAccess(true);
-                resetPasscodeTimeout(setTimeoutId, timeoutId, setAccess);
+                resetPasscodeTimeout(timeoutIdRef, setAccess);
             }
         } catch (error) {
-            console.error("Verify passcode failed", error);
+            alert(error);
         }
     };
 
@@ -94,13 +85,14 @@ const Pinpad: React.FC<PasscodeProps> = ({
                     },
                 },
             );
-            setPasscode(enteredPasscode);
-            setAccess(true);
-            setHasPasscode(true);
-            resetPasscodeTimeout(setTimeoutId, timeoutId, setAccess);
-            console.log(response);
+            if (response) {
+                setPasscode(enteredPasscode);
+                setAccess(true);
+                setHasPasscode(true);
+                resetPasscodeTimeout(timeoutIdRef, setAccess);
+            }
         } catch (error) {
-            console.error("Save passcode failed", error);
+            alert(error);
         }
     };
 

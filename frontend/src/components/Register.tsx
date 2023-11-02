@@ -68,7 +68,6 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 captcha,
             });
             onRegister(response.data.uId, response.data.key);
-            console.log("Registration successful:", response.data);
         } catch (error) {
             alert("Registration failed:" + error);
         }

@@ -4,6 +4,7 @@ import MainSection from "./MainSection";
 import AddPasswordForm from "./AddPasswordForm";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const SubtitleContainer = styled("div", {
     display: "flex",
@@ -30,6 +31,7 @@ const Home = () => {
     const [update, setUpdate] = useState(false);
     const [items, setItems] = useState<Array<Item>>([]);
     const token = localStorage.getItem("token");
+    const navigate = useNavigate();
     // const uId = localStorage.getItem("uId");
     const key = localStorage.getItem("key");
     const [loading, setLoading] = useState(true);
@@ -51,15 +53,21 @@ const Home = () => {
                 },
             );
             setItems(response.data.items);
-        } catch (error) {
-            console.log(error);
+        } catch (error: any) {
+            // Check status code
+            if (error.response.status === 498) {
+                localStorage.removeItem("token");
+                localStorage.removeItem("key");
+                localStorage.removeItem("uId");
+                navigate("/login");
+            }
         }
         setLoading(false);
     };
 
     return (
         <MainSection>
-            <h1>Welcome</h1>
+            <div style={{ fontSize: "2rem" }}>Welcome</div>
             <SubtitleContainer>
                 <p>Save, change, or remove passwords.</p>
                 <AddPasswordForm setUpdate={setUpdate} update={update} />

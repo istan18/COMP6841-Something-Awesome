@@ -9,19 +9,16 @@ export const addItem = async (req: Request, res: Response): Promise<any> => {
     const user = req.user;
 
     if (!user) {
-        console.log("Unauthorized");
         return res.status(401).json({ message: "Unauthorized" });
     }
 
     const storedUser = await UserModel.findOne({ username: user.username });
     if (!storedUser) {
-        console.log("User not found");
         return res.status(404).json({ message: "User not found" });
     }
 
     const itemExists = storedUser.items.find((item) => item.name === name);
     if (itemExists) {
-        console.log("Item already exists");
         return res.status(409).json({ message: "Item already exists" });
     }
 
@@ -38,13 +35,11 @@ export const addItem = async (req: Request, res: Response): Promise<any> => {
 
             return dataUrl;
         } catch (error) {
-            console.error("Error converting image URL to data URL", error);
-            throw error;
+            return "";
         }
     };
 
     const finalImageDataURL = imageDataURL ? imageDataURL : await imageUrlToDataUrl(defaultImg);
-    console.log("finalImageDataURL", finalImageDataURL);
 
     const item: Item = {
         name,
@@ -54,7 +49,6 @@ export const addItem = async (req: Request, res: Response): Promise<any> => {
 
     storedUser.items.push(item);
     await storedUser.save();
-    console.log("Item created");
 
     return res.status(201).json({ message: "Item created" });
 };
@@ -63,14 +57,11 @@ export const getItems = async (req: Request, res: Response): Promise<any> => {
     const user = req.user;
     const { key } = req.body;
     if (!user) {
-        console.log("Unauthorized");
         return res.status(401).json({ message: "Unauthorized" });
     }
-    console.log(key);
 
     const storedUser = await UserModel.findOne({ username: user.username });
     if (!storedUser) {
-        console.log("User not found");
         return res.status(404).json({ message: "User not found" });
     }
 
@@ -86,23 +77,19 @@ export const deleteItem = async (req: Request, res: Response): Promise<any> => {
     const name = req.params.name;
     const user = req.user;
     if (!user) {
-        console.log("Unauthorized");
         return res.status(401).json({ message: "Unauthorized" });
     }
 
     const storedUser = await UserModel.findOne({ username: user.username });
     if (!storedUser) {
-        console.log("User not found");
         return res.status(404).json({ message: "User not found" });
     }
 
     const itemIndex = storedUser.items.findIndex((item) => item.name === name);
     if (itemIndex === -1) {
-        console.log("Item not found", name);
         return res.status(404).json({ message: "Item not found" });
     }
 
-    console.log("Deleting: ", storedUser.items[itemIndex]);
     storedUser.items.splice(itemIndex, 1);
 
     await storedUser.save();
@@ -111,7 +98,8 @@ export const deleteItem = async (req: Request, res: Response): Promise<any> => {
 };
 
 export const editItem = async (req: Request, res: Response): Promise<any> => {
-    const { name, password, imageDataURL, key } = req.body;
+    const name = req.params.name;
+    const { password, imageDataURL, key } = req.body;
     const user = req.user;
     if (!user) {
         return res.status(401).json({ message: "Unauthorized" });
@@ -134,10 +122,6 @@ export const editItem = async (req: Request, res: Response): Promise<any> => {
 
     if (imageDataURL) {
         storedUser.items[itemIndex].imageDataURL = imageDataURL;
-    }
-
-    if (name) {
-        storedUser.items[itemIndex].name = name;
     }
 
     await storedUser.save();
