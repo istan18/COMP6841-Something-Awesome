@@ -28,17 +28,19 @@ if (uri == null) {
     process.exit(1);
 }
 
-// const allowedOrigins = ["http://localhost:3000", "http://localhost:3002"];
-// const corsOptions: cors.CorsOptions = {
-//     origin: (origin, callback) => {
-//         if (allowedOrigins.indexOf(origin!) !== -1 || !origin) {
-//             callback(null, true);
-//         } else {
-//             callback(new Error("Not allowed by CORS"));
-//         }
-//     },
-// };
-// app.use(cors(corsOptions));
+const allowedOrigins = ["http://localhost:3000", "https://password-manager-6841-something-awesome.onrender.com"];
+const corsOptions: cors.CorsOptions = {
+    origin: (origin, callback) => {
+        if (allowedOrigins.indexOf(origin!) !== -1 || !origin) {
+            callback(null, true);
+        } else {
+            callback(new Error("Not allowed by CORS"));
+        }
+    },
+    credentials: true,
+    optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 
 // Create a MongoClient with a MongoClientOptions object to set the Stable API version
 const client = new MongoClient(uri, {
