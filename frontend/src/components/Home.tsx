@@ -3,7 +3,7 @@ import PasswordEntry from "./PasswordEntry";
 import MainSection from "./MainSection";
 import AddPasswordForm from "./AddPasswordForm";
 import axios from "axios";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 const SubtitleContainer = styled("div", {
@@ -53,6 +53,7 @@ const Home = () => {
                 },
             );
             setItems(response.data.items);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             // Check status code
             if (error.response.status === 498) {

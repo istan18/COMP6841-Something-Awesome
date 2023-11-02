@@ -8,6 +8,7 @@ import VerificationPage from "./pages/VerificationPage";
 import ResetPage from "./pages/ResetPage";
 import { globalStyles } from "./globalStyles";
 import "./App.css";
+import React from "react";
 
 const App = () => {
     globalStyles();
