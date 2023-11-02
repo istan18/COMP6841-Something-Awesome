@@ -45,7 +45,7 @@ router.post("/signout", authenticateToken, checkTokenBlacklist, (req: Request, r
 router.get("/passcode", authenticateToken, checkTokenBlacklist, getPasscode);
 router.post("/passcode", authenticateToken, checkTokenBlacklist, setPasscode);
 router.post("/passcode/verify", authenticateToken, checkTokenBlacklist, verifyPasscode);
-router.post("/reset-password", sendForgotPassword);
-router.post("/reset-password/:token", checkResetPassword);
+router.post("/reset", sendForgotPassword);
+router.post("/reset/:token", checkResetPassword);
 
 export default router;

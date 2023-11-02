@@ -87,6 +87,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                 />
                 <Form.Submit asChild>
                     <Button
+                        type="submit"
                         css={{
                             marginTop: 10,
                             width: "fit-content",
@@ -98,6 +99,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     </Button>
                 </Form.Submit>
                 <Button
+                    type="button"
                     css={{
                         width: "fit-content",
                         alignSelf: "center",
@@ -115,6 +117,7 @@ const Login: React.FC<LoginProps> = ({ onLogin }) => {
                     Don&rsquo;t have an account? Register
                 </Button>
                 <Button
+                    type="button"
                     css={{
                         width: "fit-content",
                         alignSelf: "center",

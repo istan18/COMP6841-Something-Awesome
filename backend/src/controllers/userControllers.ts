@@ -131,7 +131,6 @@ export const sendMobileVerificationCode = async (req: Request, res: Response): P
                 to: phoneNumber as string,
                 channel: "sms",
             });
-
             return res.status(201).json({ message: "Sent verification code", code: verification.sid });
         };
 
@@ -160,24 +159,45 @@ export const checkMobileVerificationCode = async (req: Request, res: Response): 
     const authToken = process.env.TWILIO_AUTH_TOKEN;
     const serviceSid = process.env.TWILIO_SERVICE_SID as string;
     const twilioClient = twilio(accountSid, authToken);
+
+    const maxRetries = 3;
+    const initialDelay = 1000; // 1 second
+    let currentRetry = 0;
+
     try {
         const { code, uId } = req.body;
         const user = await UserModel.findById(uId);
+
         if (!user) {
             return res.status(400).json({ error: "Invalid id" });
         }
 
         const phoneNumber = user.phoneNumber;
-        const verificationCheck = await twilioClient.verify.v2.services(serviceSid).verificationChecks.create({
-            to: phoneNumber as string,
-            code,
-        });
 
-        if (verificationCheck.status === "approved") {
-            return res.status(201).json({ message: "Code verified successfully" });
-        } else {
-            return res.status(401).json({ error: "Invalid code" });
-        }
+        const verifyCodeWithRetry = async () => {
+            try {
+                const verificationCheck = await twilioClient.verify.v2.services(serviceSid).verificationChecks.create({
+                    to: phoneNumber as string,
+                    code,
+                });
+
+                if (verificationCheck.status === "approved") {
+                    return res.status(201).json({ message: "Code verified successfully" });
+                } else {
+                    return res.status(401).json({ error: "Invalid code" });
+                }
+            } catch (err: any) {
+                if (currentRetry < maxRetries) {
+                    currentRetry++;
+                    const delay = initialDelay * 2 ** currentRetry;
+                    setTimeout(verifyCodeWithRetry, delay);
+                } else {
+                    return res.status(500).json({ error: err.message });
+                }
+            }
+        };
+
+        await verifyCodeWithRetry();
     } catch (err: any) {
         return res.status(500).json({ error: err.message });
     }
@@ -304,18 +324,22 @@ export const verifyPasscode = async (req: Request, res: Response): Promise<any> 
 export const sendForgotPassword = async (req: Request, res: Response): Promise<any> => {
     const { email } = req.body;
 
-    // Check if the email exists in your database
     const user = await UserModel.findOne({ email });
 
     if (!user) {
         return res.status(404).json({ error: "User not found." });
     }
 
-    // Generate and store a reset token
     const token = generateToken(user._id.toString());
-    await UserModel.updateOne({ email }, { $set: { resetToken: token, resetTokenExpires: Date.now() + 3600000 } });
+    const storedUser = await UserModel.findOne({ email });
 
-    // Send reset email
+    if (!storedUser) {
+        return res.status(404).json({ error: "User not found." });
+    }
+    storedUser.userAuthentication.resetToken = token;
+    storedUser.userAuthentication.resetTokenExpires = new Date(Date.now() + 3600000);
+    await storedUser.save();
+
     try {
         await sendResetEmail(email, token);
         res.json({ message: "Reset email sent successfully." });
@@ -333,9 +357,15 @@ const sendResetEmail = async (email: string, token: string) => {
             pass: emailPassword,
         },
     });
-
-    const resetLink = `http://your-app.com/reset-password/${token}`;
-
+    let resetLink = null;
+    if (process.env.NODE_ENV === "production") {
+        const prodLink = process.env.APP_URL_PROD;
+        resetLink = `${prodLink}/reset/${token}`;
+    } else {
+        const devLink = process.env.APP_URL_DEV;
+        const port = process.env.FRONTEND_PORT || 3000;
+        resetLink = `${devLink}:${port}/reset/${token}`;
+    }
     const mailOptions = {
         from: "chriscla2003@gmail.com",
         to: email,
@@ -351,12 +381,17 @@ export const checkResetPassword = async (req: Request, res: Response): Promise<a
     const { password } = req.body;
 
     // Check if the token is valid
-    const user = await UserModel.findOne({ resetToken: token, resetTokenExpires: { $gt: Date.now() } });
+    const storedUser = await UserModel.findOne({
+        "userAuthentication.resetToken": token,
+        "userAuthentication.resetTokenExpires": { $gt: Date.now() },
+    });
 
-    if (!user) {
+    if (!storedUser) {
         return res.status(400).json({ error: "Invalid or expired token." });
     }
-    // Update the password and clear the reset token
-    await UserModel.updateOne({ _id: user._id }, { $set: { password, resetToken: null, resetTokenExpires: null } });
+    storedUser.password = await bcrypt.hash(password, 10);
+    storedUser.userAuthentication.resetToken = null;
+    storedUser.userAuthentication.resetTokenExpires = null;
+    await storedUser.save();
     return res.json({ message: "Password reset successfully." });
 };

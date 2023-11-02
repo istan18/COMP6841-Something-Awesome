@@ -1,5 +1,3 @@
 {
-  "PORT": 3001,
-  "PROD_URL": "https://password-manager-6841-something-awesome-01pw.onrender.com",
-  "DEV_URL": "http://localhost"
+  "PORT": 3001
 }

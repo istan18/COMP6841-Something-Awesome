@@ -6,14 +6,15 @@ import axios from "axios";
 import BACKEND from "./config.json";
 import { disableReactDevTools } from "@fvilers/disable-react-devtools";
 
-if (process.env.NODE_ENV === "production") {
+if (process.env.REACT_APP_NODE_ENV === "production") {
     disableReactDevTools();
 }
 
-if (process.env.NODE_ENV === "production") {
-    axios.defaults.baseURL = BACKEND.PROD_URL;
+if (process.env.REACT_APP_NODE_ENV === "production") {
+    axios.defaults.baseURL = process.env.REACT_APP_PROD_BACKEND_URL;
 } else {
-    axios.defaults.baseURL = `http://localhost:${BACKEND.PORT}`;
+    const url = process.env.REACT_APP_DEV_BACKEND_URL;
+    axios.defaults.baseURL = `${url}:${BACKEND.PORT}`;
 }
 
 const root = ReactDOM.createRoot(document.getElementById("root") as HTMLElement);
