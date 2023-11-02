@@ -357,7 +357,7 @@ const sendResetEmail = async (email: string, token: string) => {
             pass: emailPassword,
         },
     });
-    let resetLink = null;
+    let resetLink: string | null = null;
     if (process.env.NODE_ENV === "production") {
         const prodLink = process.env.APP_URL_PROD;
         resetLink = `${prodLink}/reset/${token}`;
