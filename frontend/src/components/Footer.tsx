@@ -1,6 +1,7 @@
 import { styled } from "@stitches/react";
 import * as Separator from "@radix-ui/react-separator";
 import Flex from "./primitives/Flex";
+import React from "react";
 
 const FooterContainer = styled("footer", {
     boxSizing: "border-box",

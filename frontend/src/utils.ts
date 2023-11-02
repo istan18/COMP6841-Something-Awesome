@@ -59,16 +59,16 @@ export const handleGeneratePassword = (
 export const getPasswordColor = (password: string) => {
     const strength = getPasswordStrength(password);
     switch (strength) {
-        case "invalid":
-            return "red";
-        case "weak":
-            return "yellow";
-        case "good":
-            return "green";
-        case "strong":
-            return "darkgreen";
-        default:
-            return "black";
+    case "invalid":
+        return "red";
+    case "weak":
+        return "yellow";
+    case "good":
+        return "green";
+    case "strong":
+        return "darkgreen";
+    default:
+        return "black";
     }
 };
 

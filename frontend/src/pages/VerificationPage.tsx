@@ -1,6 +1,6 @@
 import Verify from "../components/Verify";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import React, { useEffect } from "react";
 
 const VerificationPage = () => {
     const navigate = useNavigate();

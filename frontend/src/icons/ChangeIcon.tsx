@@ -1,4 +1,5 @@
 import IconWrapper from "./IconWrapper";
+import React from "react";
 
 const ChangeIcon = () => {
     return (

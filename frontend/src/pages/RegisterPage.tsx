@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import Register from "../components/Register";
-import { useNavigate } from "react-router-dom";
+import React, { useNavigate } from "react-router-dom";
 
 const RegisterPage = () => {
     const navigate = useNavigate();
