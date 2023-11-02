@@ -4,6 +4,7 @@ import PinPad from "../components/PinPad";
 import axios from "axios";
 import Home from "../components/Home";
 import { resetPasscodeTimeout } from "../utils";
+import React from "react";
 
 const HomePage = () => {
     const [access, setAccess] = useState<boolean>(false);
@@ -64,6 +65,7 @@ const HomePage = () => {
             });
             setPasscode(response.data.passcode);
             setHasPasscode(true);
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: any) {
             if (error.response.status === 498) {
                 localStorage.removeItem("token");
