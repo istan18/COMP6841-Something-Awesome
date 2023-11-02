@@ -27,7 +27,7 @@ module.exports = {
     ],
     parser: "@typescript-eslint/parser",
     parserOptions: {
-        ecmaVersion: "latest",
+        ecmaVersion: "2023",
         ecmaFeatures: {
             jsx: true,
         },
