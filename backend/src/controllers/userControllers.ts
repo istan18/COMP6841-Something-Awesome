@@ -131,6 +131,7 @@ export const sendMobileVerificationCode = async (req: Request, res: Response): P
                 to: phoneNumber as string,
                 channel: "sms",
             });
+
             return res.status(201).json({ message: "Sent verification code", code: verification.sid });
         };
 
@@ -138,11 +139,13 @@ export const sendMobileVerificationCode = async (req: Request, res: Response): P
             try {
                 await sendVerificationCode();
             } catch (err: any) {
+                console.log("retrying");
                 if (currentRetry < maxRetries) {
                     currentRetry++;
                     const delay = initialDelay * 2 ** currentRetry;
                     setTimeout(retryWithExponentialBackoff, delay);
                 } else {
+                    console.log(err);
                     return res.status(500).json({ error: err.message });
                 }
             }

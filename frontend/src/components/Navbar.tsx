@@ -29,11 +29,10 @@ const LogoContainer = styled(Flex, {
 const Navbar = () => {
     const navigate = useNavigate();
     const token = localStorage.getItem("token");
-    const uId = localStorage.getItem("uId");
 
     const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
         e.preventDefault();
-        if (uId) {
+        if (token) {
             try {
                 await axios.post("/users/signout", null, {
                     headers: {
@@ -87,7 +86,7 @@ const Navbar = () => {
                     <Name>pwm</Name>
                 </LogoContainer>
                 <Button onClick={handleClick} css={{ marginLeft: "90%", padding: "0 1.5rem" }}>
-                    {!uId ? "Login" : "Logout"}
+                    {!token ? "Login" : "Logout"}
                 </Button>
             </NavigationBar>
             <SeparatorRoot decorative orientation="horizontal" css={{ margin: "auto" }} />
