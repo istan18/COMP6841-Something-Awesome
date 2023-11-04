@@ -17,6 +17,8 @@ interface PasscodeProps {
     timeoutIdRef: React.MutableRefObject<NodeJS.Timeout | null>;
 }
 
+// Code taken and tranformed from https://codesandbox.io/s/pin-pad-6rz5y?file=/src/PinPad.js
+
 const Pinpad: React.FC<PasscodeProps> = ({ setHasPasscode, setPasscode, passcode, text, timeoutIdRef, setAccess }) => {
     const token = localStorage.getItem("token");
     const [passcodeState, setPasscodeState] = useState<PasscodeState>({ value: "", passCode: "------" });
