@@ -46,7 +46,9 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 alert("Username is too short");
                 return;
             } else if (getPasswordStrength(password) !== "good" && getPasswordStrength(password) !== "strong") {
-                alert("Password is not secure enough");
+                alert(
+                    "Password is not secure enough (requirements: 2 uppercase letters, 2 lowercase letters, 1 number, 1 special character (optional) and password length greater than 8)",
+                );
                 return;
             } else if (!validator.isEmail(email)) {
                 alert("Invalid email inputted");
@@ -56,6 +58,9 @@ const Register: React.FC<RegisterProps> = ({ onRegister }) => {
                 return;
             } else if (password !== confirmPassword) {
                 alert("Passwords do not match");
+                return;
+            } else if (!phoneNumber.startsWith("+614")) {
+                alert("Phone number must be in +614XXXXXXXX format");
                 return;
             }
             const response = await axios.post("/users/register", {

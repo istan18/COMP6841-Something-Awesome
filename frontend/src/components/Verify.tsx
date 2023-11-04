@@ -23,28 +23,10 @@ const InputContainer = styled(Flex, {
 
 const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
     const [buttonDisabled, setButtonDisabled] = useState(false);
-
-    const [verifiedPhone, setVerifiedPhone] = useState(false);
-    const [verifiedEmail, setVerifiedEmail] = useState(false);
     const uId = localStorage.getItem("uId");
 
     const [verificationCode, setVerificationCode] = useState("");
-
-    useEffect(() => {
-        const fetchData = async () => {
-            try {
-                if (!verifiedPhone && !verifiedEmail) {
-                    await sendVerification("mobile");
-                } else if (!verifiedEmail && verifiedPhone) {
-                    setVerificationCode("");
-                    await sendVerification("email");
-                }
-            } catch (error) {
-                alert(error);
-            }
-        };
-        fetchData();
-    }, [verifiedPhone, verifiedEmail]);
+    const [verifiedPhone, setVerifiedPhone] = useState(false);
 
     const sendVerification = async (type: string) => {
         if (!buttonDisabled) {
@@ -53,13 +35,26 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
             } catch (error: any) {
                 alert(error.response.data);
             }
-            setButtonDisabled(true);
-
-            setTimeout(() => {
-                setButtonDisabled(false);
-            }, 30000); // 30,000 milliseconds = 30 seconds
         }
     };
+
+    const resend = async (type: string) => {
+        await sendVerification(type);
+        setButtonDisabled(true);
+
+        setTimeout(() => {
+            setButtonDisabled(false);
+        }, 30000);
+    };
+
+    const fetchData = async (sending: string) => {
+        setVerificationCode("");
+        await sendVerification(sending);
+    };
+
+    useEffect(() => {
+        fetchData("mobile");
+    }, []);
 
     const handleVerify = async (e: React.FormEvent<HTMLFormElement>, type: string) => {
         e.preventDefault();
@@ -70,8 +65,8 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
             });
             if (type === "mobile") {
                 setVerifiedPhone(true);
+                await fetchData("email");
             } else {
-                setVerifiedEmail(true);
                 onVerify(response.data.token);
                 localStorage.setItem("token", response.data.token);
             }
@@ -91,7 +86,7 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
             }}
         >
             <FormRoot
-                onSubmit={(e) => handleVerify(e, !verifiedPhone && !verifiedEmail ? "mobile" : "email")}
+                onSubmit={(e) => handleVerify(e, !verifiedPhone ? "mobile" : "email")}
                 css={{
                     display: "flex",
                     paddingTop: "3rem",
@@ -100,7 +95,7 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                     gap: "0.4rem",
                 }}
             >
-                {(!verifiedPhone && !verifiedEmail && (
+                {(!verifiedPhone && (
                     <>
                         <VerifiedTitle>We sent a 6 digit verification code to your phone number.</VerifiedTitle>
                         <InputContainer>
@@ -143,14 +138,14 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                                     alignSelf: "center",
                                     padding: "0 1rem",
                                 }}
-                                onClick={() => sendVerification("mobile")}
+                                onClick={() => resend("mobile")}
                             >
                                 Send code again
                             </Button>
                         </InputContainer>
                     </>
                 )) ||
-                    (verifiedPhone && !verifiedEmail && (
+                    (verifiedPhone && (
                         <>
                             <VerifiedTitle>
                                 We also sent a 6 digit verification code to your email address.
@@ -195,14 +190,13 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
                                         alignSelf: "center",
                                         padding: "0 1rem",
                                     }}
-                                    onClick={() => sendVerification("email")}
+                                    onClick={() => resend("email")}
                                 >
                                     Send code again
                                 </Button>
                             </InputContainer>
                         </>
-                    )) ||
-                    (verifiedEmail && <div>Account is verified</div>)}
+                    )) || <div>Account is verified</div>}
             </FormRoot>
         </Flex>
     );
