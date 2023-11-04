@@ -28,6 +28,7 @@ if (uri == null) {
     process.exit(1);
 }
 
+// Only allow requests from the frontend, remove localhost during production
 const allowedOrigins = ["http://localhost:3000", "https://password-manager-6841-something-awesome.onrender.com"];
 const corsOptions: cors.CorsOptions = {
     origin: (origin, callback) => {

@@ -23,11 +23,22 @@ interface RegisterRes {
     captcha: string;
 }
 
+/**
+ * Generates a key based on the password and salt
+ * @param password Entered password
+ * @param salt Number of salt rounds
+ * @returns The key
+ */
 const keyDerivationFunction = (password: string, salt: string): string => {
     const key = CryptoJS.PBKDF2(password, salt, { keySize: 256 / 32, iterations: 1000 });
     return key.toString();
 };
 
+/**
+ * Verifies the captcha with Google's API
+ * @param recaptchaValue Given by the frontend
+ * @returns Boolean indicating whether the captcha is valid
+ */
 const verifyCaptcha = async (recaptchaValue: string): Promise<boolean> => {
     const secretKey = process.env.RECAPTCHA_SECRET_KEY;
     const verificationUrl = `https://www.google.com/recaptcha/api/siteverify?secret=${secretKey}&response=${recaptchaValue}`;
@@ -135,11 +146,11 @@ export const sendMobileVerificationCode = async (req: Request, res: Response): P
             return res.status(201).json({ message: "Sent verification code", code: verification.sid });
         };
 
+        // Sends verification code again if previous attempt failed (up to 3 times)
         const retryWithExponentialBackoff = async () => {
             try {
                 await sendVerificationCode();
             } catch (err: any) {
-                console.log("retrying");
                 if (currentRetry < maxRetries) {
                     currentRetry++;
                     const delay = initialDelay * 2 ** currentRetry;
@@ -177,6 +188,7 @@ export const checkMobileVerificationCode = async (req: Request, res: Response): 
 
         const phoneNumber = user.phoneNumber;
 
+        // Verifies the code again if previous attempt failed (up to 3 times)
         const verifyCodeWithRetry = async () => {
             try {
                 const verificationCheck = await twilioClient.verify.v2.services(serviceSid).verificationChecks.create({
@@ -232,9 +244,10 @@ export const sendEmailVerificationCode = async (req: Request, res: Response): Pr
         text: `Your code is: ${code}`,
     };
 
+    // Removes the code after 10 minutes
     setTimeout(() => {
         codeMap.delete(email);
-    }, 60000);
+    }, 600000);
 
     transporter.sendMail(mailOptions, (error) => {
         if (error) {
@@ -258,6 +271,7 @@ export const checkEmailVerificationCode = async (req: Request, res: Response): P
         return res.status(401).json({ error: "Invalid code" });
     }
 
+    // Removes the code from the map
     codeMap.delete(email);
 
     const token = generateToken(user._id.toString());
@@ -383,7 +397,6 @@ export const checkResetPassword = async (req: Request, res: Response): Promise<a
     const { token } = req.params;
     const { password } = req.body;
 
-    // Check if the token is valid
     const storedUser = await UserModel.findOne({
         "userAuthentication.resetToken": token,
         "userAuthentication.resetTokenExpires": { $gt: Date.now() },

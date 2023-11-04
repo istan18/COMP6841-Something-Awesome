@@ -24,6 +24,7 @@ export const addItem = async (req: Request, res: Response): Promise<any> => {
 
     const storedPassword = encryptPasswordWithKey(password, key);
 
+    // If no image is provided, use a default image
     const defaultImg =
         "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdkzG3UVRcUvXp7w2EXvsO7pxF8ekas7Ynxp2ri2HAVeonZunC6INi0-cUiKFfOUnqHxU&usqp=CAU";
     const imageUrlToDataUrl = async (imageUrl: string): Promise<string> => {
@@ -55,7 +56,7 @@ export const addItem = async (req: Request, res: Response): Promise<any> => {
 
 export const getItems = async (req: Request, res: Response): Promise<any> => {
     const user = req.user;
-    const { key } = req.body;
+    const { key } = req.body; // Usually would be a GET request, but to hide the key from the URL, use POST request
     if (!user) {
         return res.status(401).json({ message: "Unauthorized" });
     }
@@ -66,6 +67,7 @@ export const getItems = async (req: Request, res: Response): Promise<any> => {
     }
 
     const copyItems = storedUser.items.map((item) => {
+        // Decrypts each password with the key provided
         const decryptedPassword = decryptPasswordWithKey(item.password, key);
         return { name: item.name, imageDataURL: item.imageDataURL, password: decryptedPassword };
     });
@@ -116,6 +118,7 @@ export const editItem = async (req: Request, res: Response): Promise<any> => {
     }
 
     if (password) {
+        // Re-encrypts the password with the new key
         const storedPassword = encryptPasswordWithKey(password, key);
         storedUser.items[itemIndex].password = storedPassword;
     }

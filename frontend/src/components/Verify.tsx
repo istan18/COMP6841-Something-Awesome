@@ -31,13 +31,10 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
     const [verificationCode, setVerificationCode] = useState("");
 
     useEffect(() => {
-        let isMounted = true;
         const fetchData = async () => {
             try {
                 if (!verifiedPhone && !verifiedEmail) {
-                    if (isMounted) {
-                        await sendVerification("mobile");
-                    }
+                    await sendVerification("mobile");
                 } else if (!verifiedEmail && verifiedPhone) {
                     setVerificationCode("");
                     await sendVerification("email");
@@ -47,10 +44,6 @@ const Verify: React.FC<VerifyProps> = ({ onVerify }) => {
             }
         };
         fetchData();
-
-        return () => {
-            isMounted = false;
-        };
     }, [verifiedPhone, verifiedEmail]);
 
     const sendVerification = async (type: string) => {

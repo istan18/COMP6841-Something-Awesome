@@ -39,7 +39,7 @@ const EditPasswordForm: React.FC<EditPasswordFormProps> = ({ setUpdate, update, 
         const image = await fileToDataUrl(url);
 
         try {
-            await axios.post(
+            await axios.put(
                 `/items/edit/${item.name}`,
                 {
                     password,
@@ -78,7 +78,6 @@ const EditPasswordForm: React.FC<EditPasswordFormProps> = ({ setUpdate, update, 
                 >
                     <ChangeIcon />
                 </button>
-                {/* <Button css={{ marginLeft: "auto" }}>Edit password</Button> */}
             </Dialog.Trigger>
             <Dialog.Portal>
                 <DialogOverlay />
